@@ -1,2 +1,11 @@
 # PULSE-MODULATION
-using matlab implement Pulse amplitude modulation and pulse width modulation and pulse position modulation 
+using matlab implement PAM PWM PPM
+-PAM (pulse amplitude modulation):
+how to implement for any signal 
+and draw the spectrum of signal 
+finally demodulate the signal 
+-PWM (pulse width modulation):
+how to implement for any signal 
+and draw the spectrum of signal 
+finally demodulate the signal 
+
