@@ -1,5 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%
 %MATLAB CODE FOR PULSE MODULATIONS
+%Author hassan saker
 %%
 %signal definitions
 A0=1;      %%Amplitude
@@ -74,11 +75,12 @@ plot(y);
 title('PAM demodulation ');
 xlabel('time');
 ylabel('Amplitude');
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 
 %PWM MODULATION
 A=1.2;
-sw=A*sawtooth(2*pi*fs*t+pi);
+sw=A*sawtooth(2*pi*fs*t);
 figure ('Name','sawtooth signal with inforrmation signal');
 subplot(2,1,1)
 plot(t,sw,t,signal);
@@ -107,11 +109,121 @@ axis([0 10/fs 0 1.2]);
 N=length(PWM);
 f=[-fd/2:fd/N:(fd/2)-(fd/N)];
 PWM_f=fftshift(fft(PWM));
-figure ('Name','fourier PAM');
+figure ('Name','fourier PWM');
 plot(f,abs(PWM_f./max(PWM_f))); %% normalized to 1 by dividing to maximum value
-title('F PAM ');
+title('F PWM ');
 xlabel('frequency');
 ylabel('Amplitude');
 %%
 %Demodulation of PWM
+Ts=1/fs;
+Td=1/fd;
+Tm=1/fm;
+soep=Ts/Td; %% number of samples over each period
+for k=1:floor((5*Tm-Td)/(Ts))
+    sum=0;
+    for j=(k-1)*(Ts/Td):k*(Ts/Td)
+    sum=sum+PWM(j+1);
+    end
+    pd(k)=(sum-(soep/2))/(soep);
+end
+figure ('Name','detect PWM');
+plot(pd);
+title('Demod PWM ');
+xlabel('time');
+ylabel('Amplitude');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%PPM MODULATION
+W=0.1*soep;  %% width of pulse 
+N=length(PWM);
+PPM=zeros(1,N);
+i=1;
+while i<=N-1
+    if (PWM(i)==1 && PWM(i+1)==0)
+    for j=i:W+i
+        if(j<=N)
+        PPM(j)=1;
+        else
+            break;
+        end
+    end
+    i=W+i-1;
+    end
+    i=i+1;
+end
+plot(PWM,'LineWidth',1.5);
+hold on;
+plot(PPM,'r','LineWidth',1.5);
+title('Modulation PPM ');
+xlabel('time');
+ylabel('Amplitude');
+legend('PWM','PPM');
+axis([0 1000 0 1.2]);
+%%
+%fourier transform for PPM 
+N=length(PPM);
+f=[-fd/2:fd/N:(fd/2)-(fd/N)];
+PMM_f=fftshift(fft(PPM));
+figure ('Name','fourier PPM');
+plot(f,abs(PMM_f./max(PMM_f))); %% normalized to 1 by dividing to maximum value
+title('F PPM ');
+xlabel('frequency');
+ylabel('Amplitude');
+%%
+%PWM MODULATION
+W=0.1*soep;  %% width of pulse 
+N=length(PPM);
+det_PWM=zeros(1,N);
+%detect the fallen edge
+i=1;
+k=1;
+while i<=N-1
+    if (PPM(i)==0 && PPM(i+1)==1)
+    fallen_edge(k)=i+1;
+    k=k+1;
+    end
+    i=i+1;
+end
+%forming PWM by assign 1 till I met the fallen edge
+k=1;
+v=1;
+while k<=N
+    if(k==fallen_edge(v))
+             for j=k:soep*v
+         det_PWM(j)=0;
+            end
+         k=v*soep;
+         v=v+1;
+         
+    end
+    det_PWM(k)=1;
+    k=k+1;
+end
 
+plot(det_PWM,'LineWidth',1.5);
+hold on;
+plot(PPM,'r','LineWidth',1.5);
+title('demod PPM ');
+xlabel('time');
+ylabel('Amplitude');
+legend('det PWM','PPM');
+axis([0 1000 0 1.2]);
+%Demodulation of PWM
+Ts=1/fs;
+Td=1/fd;
+Tm=1/fm;
+soep=Ts/Td; %% number of samples over each period
+for k=1:floor((5*Tm-Td)/(Ts))
+    sum=0;
+    for j=(k-1)*(Ts/Td):k*(Ts/Td)
+    sum=sum+det_PWM(j+1);
+    end
+    pd(k)=(sum-(soep/2))/(soep);
+end
+figure ('Name','detect PWM');
+plot(pd);
+title('Demod PWM ');
+xlabel('time');
+ylabel('Amplitude');
